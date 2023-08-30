@@ -5,6 +5,8 @@ import (
 	"URL_Shortener/internal/lib/logger/sl"
 	"URL_Shortener/internal/storage/sqlite"
 	"fmt"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"os"
 )
@@ -35,7 +37,11 @@ func main() {
 	}
 
 	_ = storage
-	// todo: init router: chi, "chi render"
+
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
 	// todo: run server:
 }
 
