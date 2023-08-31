@@ -2,6 +2,8 @@ package main
 
 import (
 	"URL_Shortener/internal/config"
+	mwLogger "URL_Shortener/internal/http-server/middleware/logger"
+	"URL_Shortener/internal/lib/logger/handlers/slogpretty"
 	"URL_Shortener/internal/lib/logger/sl"
 	"URL_Shortener/internal/storage/sqlite"
 	"fmt"
@@ -29,7 +31,6 @@ func main() {
 	log := SetupLogger(cfg.Env)
 	log.Info("starting url-shortener", slog.String("env", cfg.Env))
 	log.Debug("debug messages are enabled")
-
 	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
@@ -42,6 +43,9 @@ func main() {
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.URLFormat)
 	// todo: run server:
 }
 
@@ -50,9 +54,7 @@ func SetupLogger(env string) *slog.Logger {
 
 	switch env {
 	case envLocal:
-		log = slog.New(
-			slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-		)
+		log = setupPrettySlog()
 	case envDev:
 		log = slog.New(
 			slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
@@ -63,4 +65,16 @@ func SetupLogger(env string) *slog.Logger {
 		)
 	}
 	return log
+}
+
+func setupPrettySlog() *slog.Logger {
+	opts := slogpretty.PrettyHandlerOptions{
+		SlogOpts: &slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+	}
+
+	handler := opts.NewPrettyHandler(os.Stdout)
+
+	return slog.New(handler)
 }
