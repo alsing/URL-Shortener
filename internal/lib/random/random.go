@@ -5,13 +5,15 @@ import (
 	"time"
 )
 
-var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+var rnd = rand.New(rand.NewSource(time.Now().UnixNano()))
+var chars = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
 
-func NewRandomString(n int) string {
-	rnd := rand.New(rand.NewSource(time.Now().UnixNano()))
-	b := make([]rune, n)
+// NewRandomString generates random string with given size.
+func NewRandomString(size int) string {
+	b := make([]rune, size)
 	for i := range b {
-		b[i] = letters[rnd.Intn(len(letters))]
+		b[i] = chars[rnd.Intn(len(chars))]
 	}
+
 	return string(b)
 }
